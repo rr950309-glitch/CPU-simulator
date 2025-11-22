@@ -1,0 +1,115 @@
+#include <stdio.h>
+
+typedef struct Process {
+    int pid;            // process ID
+    int arrival_time;   // 何時進入系統
+    int burst_time;     // 需要多少 CPU 時間
+    int remaining_time; // RR, Preemptive SJF 用
+    int priority;       // 若有 Priority Scheduling
+    int start_time;
+    int finish_time;
+    int waiting_time;
+    int turnaround_time;
+} Process;
+
+typedef struct Node {
+    Process *proc;
+    struct Node *next;
+} Node;
+
+typedef struct Queue {
+    Node *front;
+    Node *rear;
+} Queue;
+
+void enqueue(Queue *q, Process *p);
+Process* dequeue(Queue *q);
+int is_empty(Queue *q);
+
+
+typedef Process* (*scheduler_func)(Queue *ready_queue, int now);
+
+Process* schedule_fcfs(Queue *ready_queue, int now) {
+    return dequeue(ready_queue);
+}
+
+Process* schedule_sjf(Queue *ready_queue, int now) {
+    Node *cur = ready_queue->front;
+    Node *best_prev = NULL, *best = cur;
+    int min = cur->proc->burst_time;
+
+    while (cur->next) {
+        if (cur->next->proc->burst_time < min) {
+            min = cur->next->proc->burst_time;
+            best_prev = cur;
+            best = cur->next;
+        }
+        cur = cur->next;
+    }
+
+    // 從 queue 裡移除 best
+    if (best_prev) {
+        best_prev->next = best->next;
+        if (ready_queue->rear == best) ready_queue->rear = best_prev;
+    } else {
+        ready_queue->front = best->next;
+        if (best == ready_queue->rear) ready_queue->rear = best->next;
+    }
+
+    best->next = NULL;
+    return best->proc;
+}
+
+Process* schedule_rr(Queue *ready_queue, int now) {
+    return dequeue(ready_queue);
+}
+
+void simulate(Queue *job_queue, scheduler_func scheduler) {
+    Queue ready_queue = {0};
+    int now = 0;
+    Process *running = NULL;
+
+    while (!is_empty(job_queue) || !is_empty(&ready_queue) || running != NULL) {
+
+        // 1. 有 arrival 的 process -> ready queue
+        while (!is_empty(job_queue) && job_queue->front->proc->arrival_time <= now) {
+            enqueue(&ready_queue, dequeue(job_queue));
+        }
+
+        // 2. 若 CPU idle，從 scheduler 選一個 process
+        if (running == NULL && !is_empty(&ready_queue)) {
+            running = scheduler(&ready_queue, now);
+            if (running->start_time == -1) running->start_time = now;
+        }
+
+        // 3. 執行 1 單位時間
+        if (running != NULL) {
+            running->remaining_time--;
+            if (running->remaining_time == 0) {
+                running->finish_time = now + 1;
+                running = NULL; // process done
+            }
+        }
+
+        now++;
+    }
+}
+
+int main() {
+    Queue job_queue = {0};
+
+    load_processes_from_file("input.txt", &job_queue);
+
+    printf("Choose algorithm: 1=FCFS, 2=SJF, 3=RR\n");
+    int option;
+    scanf("%d", &option);
+
+    scheduler_func scheduler;
+    if (option == 1) scheduler = schedule_fcfs;
+    else if (option == 2) scheduler = schedule_sjf;
+    else scheduler = schedule_rr;
+
+    simulate(&job_queue, scheduler);
+
+    return 0;
+}
