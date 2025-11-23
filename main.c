@@ -22,9 +22,56 @@ typedef struct Queue {
     Node *rear;
 } Queue;
 
-void enqueue(Queue *q, Process *p);
-Process* dequeue(Queue *q);
-int is_empty(Queue *q);
+int is_empty(Queue *q){
+
+    if(q->front == NULL)
+        return 1;
+
+    else
+        return 0;
+
+}
+
+void enqueue(Queue *q, Process *p){
+
+    Node *node = (Node *)malloc(sizeof(Node));
+    node->proc = p;
+    node->next = NULL;
+
+    if(is_empty(q)){
+
+        q->front = node;
+        q->rear = node;
+
+    }
+
+    else{
+
+        q->rear->next = node;
+        q->rear = node;
+
+    }
+
+}
+
+Process* dequeue(Queue *q){
+
+    if(is_empty(q))
+        return NULL;
+        
+    else{
+
+        Queue *temp = NULL;
+        temp = q->front;
+
+        q->front = q->front->next;
+        free(q->front);
+
+        return q->front->proc;
+
+    }
+
+}
 
 
 typedef Process* (*scheduler_func)(Queue *ready_queue, int now);
