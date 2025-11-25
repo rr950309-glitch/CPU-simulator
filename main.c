@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 typedef struct Process {
     int pid;            // process ID
@@ -117,6 +118,7 @@ Process* schedule_rr(Queue *ready_queue, int now) {
 void simulate(Queue *job_queue, scheduler_func scheduler) {
     Queue ready_queue = {0};
     int now = 0;
+    int time_quantum=20;//for rr scheduler
     Process *running = NULL;
 
     while (!is_empty(job_queue) || !is_empty(&ready_queue) || running != NULL) {
@@ -137,7 +139,17 @@ void simulate(Queue *job_queue, scheduler_func scheduler) {
             running->remaining_time--;
             if (running->remaining_time == 0) {
                 running->finish_time = now + 1;
+                time_quantum=20;
                 running = NULL; // process done
+            }
+            if(scheduler==schedule_rr&&running!=NULL){
+                time_quantum--;
+                if(time_quantum==0){
+                    Process* temp=running;
+                    running =NULL;
+                    enqueue(&ready_queue,temp);
+                    time_quantum=20;
+                }
             }
         }
 
