@@ -117,7 +117,7 @@ void enqueue_Array(Queue_Array *q, Process *p){
         }
         else{
             if(q->count == q->max)//如果陣列已滿：不能再塞元素到q->Data[0]
-                printf("/n/n/陣列已滿，無法再用wrap-around塞值到q->Data[0]!!!\n\n");
+                printf("/n/n/陣列已滿，無法再用wrap-around塞值到q->Data[0]!!!/n/n");
             else{//wrap-around
                 q->rear = 0;
                 q->Data[q->rear] = *p;
