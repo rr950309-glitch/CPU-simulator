@@ -25,9 +25,12 @@ typedef struct queue {
 } Queue_LL;
 
 typedef struct queuearray{
-    Process *front;
+    int count;
+    int front;
     Process *memo;
-    Process *rear;
+    int rear;
+    int max;
+    Process *Data;
 }Queue_Array;
 
 int is_empty_LL(Queue_LL *q){
@@ -73,6 +76,77 @@ Process* dequeue_LL(Queue_LL *q){
         q->front = q->front->next;
         free(temp);
         return item;
+    }
+
+}
+
+
+
+
+void initArray(Queue_Array *q,int max){//請用此函式直接在這裡宣告陣列(^u^)
+
+    q->count = 0;
+    q->front = 0;
+    q->rear = 0;
+    q->max = max;
+    q->Data = (Process *)malloc(sizeof(Process) * max);
+
+}
+
+int is_empty_Array(Queue_Array *q){
+
+    if(q->count == 0)
+        return 1;
+
+    else
+        return 0;
+
+}
+
+void enqueue_Array(Queue_Array *q, Process *p){
+
+    if(is_empty_Array(q)){
+        q->Data[q->front] = *p;
+        q->count++;
+    }
+    else{
+        if(q->rear != q->max){
+            q->rear++;
+            q->Data[q->rear] = *p;
+            q->count++;
+        }
+        else{
+            if(q->count == q->max)//如果陣列已滿：不能再塞元素到q->Data[0]
+                printf("/n/n/陣列已滿，無法再用wrap-around塞值到q->Data[0]!!!\n\n");
+            else{//wrap-around
+                q->rear = 0;
+                q->Data[q->rear] = *p;
+                q->count++;
+            }
+        }
+    }
+}
+
+Process* dequeue_Array(Queue_Array *q){
+
+    if(is_empty_Array(q)) return NULL;
+    
+    else{
+        if(q->front == q->rear){
+            Process *t;
+            *t = q->Data[q->front];
+            q->front = q->rear = 0;
+            return t;
+        }
+        else{
+            int temp;
+            temp = q->front;
+            q->front++;
+            q->count--;
+            Process *t;
+            *t = q->Data[temp];
+            return t;
+        }
     }
 
 }
