@@ -231,9 +231,10 @@ void simulate_LL(Queue_LL *job_queue, Queue_LL *ready_queue, scheduler_func_LL s
             running = scheduler(ready_queue, now);
             if(running->start_time == -1){
                 running->start_time = now;
-                running->waiting_time = now - running->arrival_time;
-                ready_queue->memo->waiting_time = ready_queue->memo->waiting_time + running->waiting_time;
+                running->response_time = now;
             }
+            running->waiting_time = now - running->arrival_time;
+            ready_queue->memo->waiting_time = ready_queue->memo->waiting_time + running->waiting_time;
         }
 
         // 3. 執行 1 單位時間
@@ -257,7 +258,7 @@ void simulate_LL(Queue_LL *job_queue, Queue_LL *ready_queue, scheduler_func_LL s
         now++;
     }
 }
-
+/*
 void simulate_Array(Queue_Array *job_queue, Queue_Array *ready_queue, scheduler_func_LL scheduler) {
     
     int now = 0;
@@ -301,7 +302,8 @@ void simulate_Array(Queue_Array *job_queue, Queue_Array *ready_queue, scheduler_
         }
         now++;
     }
-}
+}  
+    */
 
 void load_processes_from_file(Queue_LL *job){
     char file[10];
