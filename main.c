@@ -178,6 +178,7 @@ void shiftArray(Queue_Array *ready_queue, int target){
     arrcopy()
 }*/
 
+/*
 Process* schedule_npsjf_Array(Queue_Array *ready_queue, int now) {
     if(is_empty_Array(ready_queue)) return NULL;
     int cur = ready_queue->front;
@@ -206,6 +207,7 @@ Process* schedule_npsjf_Array(Queue_Array *ready_queue, int now) {
     }
     return dequeue_Array(ready_queue);
 }
+*/
 
 typedef Process* (*scheduler_func_LL)(Queue_LL *ready_queue, int now);
 typedef Process* (*scheduler_func_Array)(Queue_Array *ready_queue, int now);
