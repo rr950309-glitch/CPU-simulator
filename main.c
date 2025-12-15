@@ -169,6 +169,7 @@ void arrcopy(Process *des, Process *sour){
 
 }
 
+/*
 void shiftArray(Queue_Array *ready_queue, int target){
     Process temp;
     arrcopy(&temp, &(ready_queue->Data[target]));
@@ -177,6 +178,7 @@ void shiftArray(Queue_Array *ready_queue, int target){
     }
     arrcopy()
 }
+*/
 
 /*
 Process* schedule_npsjf_Array(Queue_Array *ready_queue, int now) {
@@ -250,6 +252,34 @@ Process* schedule_rr_LL(Queue_LL *ready_queue, int now) {
 }
 
 Process* schedule_psjf_LL(Queue_LL *ready_queue, int now){
+    if(is_empty_LL(ready_queue)) return NULL;
+
+    Node *cur = ready_queue->front;
+    Node *best_prev = NULL, *prev = NULL, *best = cur;
+    int min = cur->proc->remaining_time;
+
+    while (cur != NULL) {
+        //找出時間為now時ready_queue中remaining_time最小的Node
+        if (cur->proc->remaining_time < min) {
+            min = cur->proc->remaining_time;
+            best = cur;
+            best_prev = prev;
+        }
+        prev = cur;
+        cur = cur->next;
+    }
+
+    // 把best 放到queue 中front 的位置
+    //best不在queue裡front的位置
+    if (best != ready_queue->front) {
+        best_prev->next = best->next;
+        if (ready_queue->rear == best) {
+            ready_queue->rear = best_prev;
+        }
+        best->next = ready_queue->front;
+        ready_queue->front = best;
+    }
+    
     return dequeue_LL(ready_queue);
 }
 
@@ -277,8 +307,6 @@ void simulate_LL(Queue_LL *job_queue, Queue_LL *ready_queue, scheduler_func_LL s
                 running->start_time = now;
                 running->response_time = running->start_time-running->arrival_time;
             }
-            running->waiting_time = now - running->arrival_time;
-            ready_queue->memo->waiting_time = ready_queue->memo->waiting_time + running->waiting_time;
         }
 
         // 3. 執行 1 單位時間
@@ -286,8 +314,12 @@ void simulate_LL(Queue_LL *job_queue, Queue_LL *ready_queue, scheduler_func_LL s
             running->remaining_time--;
             if (running->remaining_time == 0) {
                 running->finish_time = now + 1;
-                time_quantum = 20;
+                running->turnaround_time = running->finish_time - running->arrival_time;
+                running->waiting_time = running->turnaround_time - running->burst_time;
+                ready_queue->memo->waiting_time += running->waiting_time;
+    
                 running = NULL; // process done
+                time_quantum = 20;
             }
             if(scheduler == schedule_rr_LL && running !=NULL){
                 time_quantum--;
@@ -297,6 +329,24 @@ void simulate_LL(Queue_LL *job_queue, Queue_LL *ready_queue, scheduler_func_LL s
                     running = NULL;
                     enqueue_LL(ready_queue,temp);
                     time_quantum=20;
+                }
+            }
+            if(scheduler == schedule_psjf_LL && running != NULL && !is_empty_LL(ready_queue)){
+                Process *candidate = ready_queue->front->proc;
+
+                if (candidate->remaining_time < running->remaining_time) {
+                    // preempt
+                    enqueue_LL(ready_queue, running);
+                    running = scheduler(ready_queue, now);
+
+                    if (running->start_time == -1) {
+                        running->start_time = now;
+                        running->response_time = now - running->arrival_time;
+                    }
+                    else {
+                        // 不 preempt，把 candidate 放回去
+                        enqueue_LL(ready_queue, candidate);
+                    }
                 }
             }
         }
@@ -373,6 +423,7 @@ void load_processes_from_file(Queue_LL *job){
         id++;
         n = createpro();
     }
+    fclose(fp);
     return;
 }
 
@@ -389,7 +440,7 @@ int main() {
 
     load_processes_from_file(job_queue);
     
-    printf("Choose algorithm: 1=FCFS, 2=SJF, 3=RR\n");
+    printf("Choose algorithm: 1=FCFS, 2=SJF, 3=RR, 4=Preemptive SJF\n");
     int option;
     scanf("%d", &option);
 
@@ -403,6 +454,6 @@ int main() {
 
     simulate_LL(job_queue, ready_queue, scheduler_LL);
 
-    printf("toltal waiting time: %d\n",ready_queue->memo->waiting_time);
+    printf("total waiting time: %d\n",ready_queue->memo->waiting_time);
     return 0;
 }
