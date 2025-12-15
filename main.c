@@ -117,7 +117,7 @@ void enqueue_Array(Queue_Array *q, Process *p){
         }
         else{
             if(q->count == q->max)//如果陣列已滿：不能再塞元素到q->Data[0]
-                printf("/n/n/陣列已滿，無法再用wrap-around塞值到q->Data[0]!!!/n/n");
+                printf("/n/n/Array is full. Can't not wrap-around to assign q->Data[0]!!!/n/n");
             else{//wrap-around
                 q->rear = 0;
                 q->Data[q->rear] = *p;
@@ -165,7 +165,7 @@ Process *createpro(){
     return temp;
 }
 
-/*void arrcopy(Process *des, Process *sour){
+void arrcopy(Process *des, Process *sour){
 
 }
 
@@ -176,7 +176,7 @@ void shiftArray(Queue_Array *ready_queue, int target){
         arrcopy(&(ready_queue->Data[i]), &(ready_queue->Data[i-1]))
     }
     arrcopy()
-}*/
+}
 
 /*
 Process* schedule_npsjf_Array(Queue_Array *ready_queue, int now) {
@@ -206,8 +206,8 @@ Process* schedule_npsjf_Array(Queue_Array *ready_queue, int now) {
         ready_queue->front = best;
     }
     return dequeue_Array(ready_queue);
-}
-*/
+}*/
+
 
 typedef Process* (*scheduler_func_LL)(Queue_LL *ready_queue, int now);
 typedef Process* (*scheduler_func_Array)(Queue_Array *ready_queue, int now);
