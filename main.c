@@ -165,50 +165,53 @@ Process *createpro(){
     return temp;
 }
 
-void arrcopy(Process *des, Process *sour){
-
+void struct_copy(Process *des, Process *sour){
+    des->pid = sour->pid;
+    des->arrival_time = sour->arrival_time;
+    des->burst_time = sour->burst_time;
+    des->finish_time = sour->finish_time;
+    des->remaining_time = sour->remaining_time;
+    des->response_time = sour->response_time;
+    des->start_time = sour->start_time;
+    des->turnaround_time = sour->turnaround_time;
+    des->waiting_time = sour->waiting_time;
 }
 
-/*
-void shiftArray(Queue_Array *ready_queue, int target){
-    Process temp;
-    arrcopy(&temp, &(ready_queue->Data[target]));
-    for(int i = target; i<=ready_queue->front; i++){
-        arrcopy(&(ready_queue->Data[i]), &(ready_queue->Data[i-1]))
-    }
-    arrcopy()
+void swap_array(Process *a1, Process *a2){
+    Process *temp = createpro();
+    struct_copy(temp, a1);
+    struct_copy(a1, a2);
+    struct_copy(a2, temp);
 }
-*/
 
-/*
 Process* schedule_npsjf_Array(Queue_Array *ready_queue, int now) {
     if(is_empty_Array(ready_queue)) return NULL;
+    //從front開始
     int cur = ready_queue->front;
+    int prev = 0, best_index = cur;
+    int mintime = ready_queue->Data[cur].burst_time;
 
-    int best_prev = 0, prev = 0, best = cur, c = 0;
-    int min = ready_queue->Data[cur].burst_time;
-
-    for(int c=0; c < ready_queue->count; c++) {
+    for(int c=1; c < ready_queue->count; c++) {
         //找出時間為now時ready_queue中burst_time最小的Node
-        if (ready_queue->Data[cur].burst_time < min) {
-            min = ready_queue->Data[cur].burst_time;
-            best = cur;
-            best_prev = prev;
+        if (ready_queue->Data[cur+1].burst_time < mintime) {
+            mintime = ready_queue->Data[cur+1].burst_time;
+            best_index = cur+1;
+        }else if (ready_queue->Data[cur+1].burst_time == mintime){//當2 process的burst_time相同時，選arrival_time較早的
+            if(ready_queue->Data[cur+1].arrival_time < ready_queue->Data[best_index].arrival_time){
+                best_index = cur+1;
+            }
         }
         prev = cur;
         cur++;
     }
 
     // 把best 放到queue 中front 的位置
-    //best不在queue裡front的位置
-    if (best != ready_queue->front) {
-        best_prev->next = best->next;
-        if (ready_queue->rear == best) ready_queue->rear = best_prev;
-        best->next = ready_queue->front;
-        ready_queue->front = best;
+    //當best不在queue裡front的位置
+    if (best_index != ready_queue->front) {
+        swap_array(&ready_queue->Data[best_index],&ready_queue->Data[ready_queue->front]);
     }
     return dequeue_Array(ready_queue);
-}*/
+}
 
 
 typedef Process* (*scheduler_func_LL)(Queue_LL *ready_queue, int now);
