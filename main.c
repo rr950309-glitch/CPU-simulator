@@ -314,16 +314,41 @@ void simulate_LL(Queue_LL *job_queue, Queue_LL *ready_queue, scheduler_func_LL s
 
         // 3. 執行 1 單位時間
         if (running != NULL) {
+            
+            /*If the scheduler is Non-preemptive SJF, check if the remaining time of process that is running is shorter than the candidate.*/
+            if(scheduler == schedule_psjf_LL && running != NULL && !is_empty_LL(ready_queue)){
+                Process *candidate = scheduler(ready_queue, now);
+
+                if (candidate != NULL && candidate->remaining_time < running->remaining_time) {
+                    // preempt
+                    enqueue_LL(ready_queue, running);
+                    running = candidate;
+
+                    if (running->start_time == -1) {
+                        running->start_time = now;
+                        running->response_time = now - running->arrival_time;
+                    }
+                    
+                }
+                else if(candidate != NULL){
+                    // 不 preempt，把 candidate 放回去
+                    enqueue_LL(ready_queue, candidate);
+                }
+            }
+
             running->remaining_time--;
+
             if (running->remaining_time == 0) {
                 running->finish_time = now + 1;
                 running->turnaround_time = running->finish_time - running->arrival_time;
                 running->waiting_time = running->turnaround_time - running->burst_time;
                 ready_queue->memo->waiting_time += running->waiting_time;
+                ready_queue->memo->turnaround_time += running->turnaround_time;
     
                 running = NULL; // process done
                 time_quantum = 20;
             }
+            
             if(scheduler == schedule_rr_LL && running !=NULL){
                 time_quantum--;
                 if(time_quantum==0){
@@ -334,24 +359,7 @@ void simulate_LL(Queue_LL *job_queue, Queue_LL *ready_queue, scheduler_func_LL s
                     time_quantum=20;
                 }
             }
-            if(scheduler == schedule_psjf_LL && running != NULL && !is_empty_LL(ready_queue)){
-                Process *candidate = ready_queue->front->proc;
 
-                if (candidate->remaining_time < running->remaining_time) {
-                    // preempt
-                    enqueue_LL(ready_queue, running);
-                    running = scheduler(ready_queue, now);
-
-                    if (running->start_time == -1) {
-                        running->start_time = now;
-                        running->response_time = now - running->arrival_time;
-                    }
-                    else {
-                        // 不 preempt，把 candidate 放回去
-                        enqueue_LL(ready_queue, candidate);
-                    }
-                }
-            }
         }
         now++;
     }
@@ -458,5 +466,6 @@ int main() {
     simulate_LL(job_queue, ready_queue, scheduler_LL);
 
     printf("total waiting time: %d\n",ready_queue->memo->waiting_time);
+    printf("total turnaround time: %d\n", ready_queue->memo->turnaround_time);
     return 0;
 }
