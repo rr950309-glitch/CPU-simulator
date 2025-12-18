@@ -34,6 +34,94 @@ typedef struct queuearray{
     Process *Data;
 }Queue_Array;
 
+int is_empty_LL(Queue_LL *);
+void enqueue_LL(Queue_LL *, Process *);
+Process* dequeue_LL(Queue_LL *);
+
+Process *createpro();
+
+void initqueue_Array(Queue_Array *,int);
+int is_empty_Array(Queue_Array *);
+void enqueue_Array(Queue_Array *, Process *);
+Process* dequeue_Array(Queue_Array *);
+
+void struct_copy(Process *, Process *);
+void swap_array(Process *, Process *);
+
+typedef Process* (*scheduler_func_LL)(Queue_LL *);
+typedef Process* (*scheduler_func_Array)(Queue_Array *);
+
+Process* schedule_fcfs_LL(Queue_LL *);
+Process* schedule_npsjf_LL(Queue_LL *);
+Process* schedule_rr_LL(Queue_LL *);
+Process* schedule_psjf_LL(Queue_LL *);
+
+Process* schedule_fcfs_Array(Queue_Array *);
+Process* schedule_npsjf_Array(Queue_Array *);
+Process* schedule_rr_Array(Queue_Array *);
+Process* schedule_psjf_Array(Queue_Array *);
+
+void simulate_LL(Queue_LL *, Queue_LL *, scheduler_func_LL);
+void simulate_Array(Queue_Array *, Queue_Array *, scheduler_func_Array);
+
+void load_processes_from_file_LL(Queue_LL *);
+void load_processes_from_file_Array(Queue_Array *);
+
+
+
+int main() {
+    Queue_LL *job_queue_LL = malloc(sizeof(Queue_LL));
+    job_queue_LL->front = NULL;
+    job_queue_LL->rear = NULL;
+    job_queue_LL->memo = NULL;
+
+    Queue_LL *ready_queue_LL = malloc(sizeof(Queue_LL));
+    ready_queue_LL->front = NULL;
+    ready_queue_LL->rear = NULL;
+    ready_queue_LL->memo = createpro();
+
+    Queue_Array *job_queue_array = malloc(sizeof(Queue_Array));
+    initqueue_Array(job_queue_array, MAX);
+    job_queue_array->memo = NULL;
+
+    Queue_Array *ready_queue_array = malloc(sizeof(Queue_Array));
+    initqueue_Array(ready_queue_array, MAX);
+    ready_queue_array->memo = createpro();
+
+    
+    printf("Choose algorithm: 1=FCFS_LL, 2=SJF_LL, 3=RR_LL, 4=Preemptive SJF_LL ; 5=FCFS_Array, 6=SJF_Array, 7=RR_Array, 8=Preemptive SJF_Array\n");
+    int option;
+    scanf("%d", &option);
+
+    scheduler_func_LL scheduler_LL;
+    scheduler_func_Array scheduler_Array;
+    if (option == 1) scheduler_LL = schedule_fcfs_LL;
+    else if (option == 2) scheduler_LL = schedule_npsjf_LL;
+    else if (option == 3) scheduler_LL = schedule_rr_LL;
+    else if (option == 4) scheduler_LL = schedule_psjf_LL;
+    else if (option == 5) scheduler_Array = schedule_fcfs_Array;
+    else if (option == 6) scheduler_Array = schedule_npsjf_Array;
+    else if (option == 7) scheduler_Array = schedule_rr_Array;
+    else if (option == 8) scheduler_Array = schedule_psjf_Array;
+
+    if(0 < option && option < 5){
+        load_processes_from_file_LL(job_queue_LL);
+        simulate_LL(job_queue_LL, ready_queue_LL, scheduler_LL);
+        printf("total waiting time: %d\n",ready_queue_LL->memo->waiting_time);
+        printf("total turnaround time: %d\n", ready_queue_LL->memo->turnaround_time);
+    }
+    else{ 
+        load_processes_from_file_Array(job_queue_array);
+        simulate_Array(job_queue_array, ready_queue_array, scheduler_Array);
+        printf("total waiting time: %d\n",ready_queue_array->memo->waiting_time);
+        printf("total turnaround time: %d\n", ready_queue_array->memo->turnaround_time);
+    }
+    
+    return 0;
+}
+
+
+
 int is_empty_LL(Queue_LL *q){
 
     if(q->front == NULL)
@@ -81,10 +169,21 @@ Process* dequeue_LL(Queue_LL *q){
 
 }
 
+Process *createpro(){
+    Process *temp = malloc(sizeof(Process));
+    temp->pid = 0;
+    temp->arrival_time = 0;
+    temp->burst_time = 0;
+    temp->finish_time = 0;
+    temp->remaining_time = 0;
+    temp->response_time = 0;
+    temp->start_time = -1;
+    temp->turnaround_time = 0;
+    temp->waiting_time = 0;
+    return temp;
+}
 
-
-
-void initqueue_Array(Queue_Array *q,int max){//請用此函式直接在這裡宣告陣列(^u^)
+void initqueue_Array(Queue_Array *q,int max){//用此函式直接宣告陣列
 
     q->count = 0;
     q->front = 0;
@@ -106,26 +205,6 @@ int is_empty_Array(Queue_Array *q){
 
 void enqueue_Array(Queue_Array *q, Process *p){
 
-    /*if(is_empty_Array(q)){
-        q->Data[q->front] = *p;
-        q->count++;
-    }
-    else{
-        if(q->rear != q->max-1){
-            q->rear++;
-            q->Data[q->rear] = *p;
-            q->count++;
-        }
-        else{
-            if(q->count == q->max)//如果陣列已滿：不能再塞元素到q->Data[0]
-                printf("/n/n/Array is full. Can't not wrap-around to assign q->Data[0]!!!/n/n");
-            else{//wrap-around
-                q->rear = 0;
-                q->Data[q->rear] = *p;
-                q->count++;
-            }
-        }
-    }*/
    if(q->count == q->max){
         printf("/n/n/Array is full. Can't not wrap-around to assign q->Data[0]!!!/n/n");
         return;
@@ -134,20 +213,7 @@ void enqueue_Array(Queue_Array *q, Process *p){
     q->Data[q->rear] = *p;
     q->rear = (q->rear + 1) % q->max;
     q->count++;
-}
-
-Process *createpro(){
-    Process *temp = malloc(sizeof(Process));
-    temp->pid = 0;
-    temp->arrival_time = 0;
-    temp->burst_time = 0;
-    temp->finish_time = 0;
-    temp->remaining_time = 0;
-    temp->response_time = 0;
-    temp->start_time = -1;
-    temp->turnaround_time = 0;
-    temp->waiting_time = 0;
-    return temp;
+    
 }
 
 Process* dequeue_Array(Queue_Array *q){
@@ -188,34 +254,6 @@ void swap_array(Process *a1, Process *a2){
     struct_copy(a2, temp);
 }
 
-Process* schedule_npsjf_Array(Queue_Array *ready_queue) {
-    if(is_empty_Array(ready_queue)) return NULL;
-    //從front開始
-    int cur = ready_queue->front;
-    int best_index = cur;
-    int mintime = ready_queue->Data[cur].burst_time;
-
-    for(int c=1; c < ready_queue->count; c++) {
-        //找出時間為now時ready_queue中burst_time最小的Node
-        if((cur+1)%MAX == 0){
-            cur = -1;
-        }
-        if (ready_queue->Data[cur+1].burst_time < mintime) {
-            mintime = ready_queue->Data[cur+1].burst_time;
-            best_index = cur+1;
-        }
-        cur++;
-    }
-
-    // 把best 放到queue 中front 的位置
-    //當best不在queue裡front的位置
-    if (best_index != ready_queue->front) {
-        swap_array(&ready_queue->Data[best_index],&ready_queue->Data[ready_queue->front]);
-    }
-    return dequeue_Array(ready_queue);
-}
-
-
 typedef Process* (*scheduler_func_LL)(Queue_LL *ready_queue);
 typedef Process* (*scheduler_func_Array)(Queue_Array *ready_queue);
 
@@ -241,8 +279,7 @@ Process* schedule_npsjf_LL(Queue_LL *ready_queue) {
         cur = cur->next;
     }
 
-    // 把best 放到queue 中front 的位置
-    //best不在queue裡front的位置
+    //best不在queue裡front的位置->把best放到queue中front的位置
     if (best != ready_queue->front) {
         best_prev->next = best->next;
         if (ready_queue->rear == best) ready_queue->rear = best_prev;
@@ -292,6 +329,33 @@ Process* schedule_fcfs_Array(Queue_Array *ready_queue){
     return dequeue_Array(ready_queue);
 }
 
+Process* schedule_npsjf_Array(Queue_Array *ready_queue) {
+    if(is_empty_Array(ready_queue)) return NULL;
+    //從front開始
+    int cur = ready_queue->front;
+    int best_index = cur;
+    int mintime = ready_queue->Data[cur].burst_time;
+
+    for(int c=1; c < ready_queue->count; c++) {
+        //找出時間為now時ready_queue中burst_time最小的Process
+        if((cur+1)%MAX == 0){
+            cur = -1;
+        }
+        if (ready_queue->Data[cur+1].burst_time < mintime) {
+            mintime = ready_queue->Data[cur+1].burst_time;
+            best_index = cur+1;
+        }
+        cur++;
+    }
+
+    
+    //當best_index不是queue->front->把best_index跟queue->front交換位置
+    if (best_index != ready_queue->front) {
+        swap_array(&ready_queue->Data[best_index],&ready_queue->Data[ready_queue->front]);
+    }
+    return dequeue_Array(ready_queue);
+}
+
 Process* schedule_rr_Array(Queue_Array *ready_queue) {
     return dequeue_Array(ready_queue);
 }
@@ -318,8 +382,7 @@ Process* schedule_psjf_Array(Queue_Array *ready_queue){
     
     }
 
-    // 把best 放到queue 中front 的位置
-    //best不在queue裡front的位置
+    //當best_index不是queue->front->把best_index跟queue->front交換位置
     if(best_index != ready_queue->front)
         swap_array(&ready_queue->Data[best_index],&ready_queue->Data[ready_queue->front]);
     
@@ -334,12 +397,12 @@ void simulate_LL(Queue_LL *job_queue, Queue_LL *ready_queue, scheduler_func_LL s
 
     while (!is_empty_LL(job_queue) || !is_empty_LL(ready_queue) || running != NULL) {
 
-        // 1. 有 arrival 的 process -> ready queue
+        // 1.有arrival的process -> ready queue
         while (!is_empty_LL(job_queue) && job_queue->front->proc->arrival_time <= now) {
             enqueue_LL(ready_queue, dequeue_LL(job_queue));
         }
 
-        // 2. 若 CPU idle，從 scheduler 選一個 process
+        // 2.若CPU idle，從scheduler選一個process
         if (running == NULL && !is_empty_LL(ready_queue)) {
             running = scheduler(ready_queue);
             if(running->start_time == -1){
@@ -348,10 +411,10 @@ void simulate_LL(Queue_LL *job_queue, Queue_LL *ready_queue, scheduler_func_LL s
             }
         }
 
-        // 3. 執行 1 單位時間
+        // 3.執行1單位時間
         if (running != NULL) {
             
-            /*If the scheduler is Non-preemptive SJF, check if the remaining time of process that is running is shorter than the candidate.*/
+            //If the scheduler is Non-preemptive SJF, check if the remaining time of process that is running is shorter than the candidate.
             if(scheduler == schedule_psjf_LL && running != NULL && !is_empty_LL(ready_queue)){
                 Process *candidate = scheduler(ready_queue);
 
@@ -367,7 +430,7 @@ void simulate_LL(Queue_LL *job_queue, Queue_LL *ready_queue, scheduler_func_LL s
                     
                 }
                 else if(candidate != NULL){
-                    // 不 preempt，把 candidate 放回去
+                    //不preempt，把candidate放回去
                     enqueue_LL(ready_queue, candidate);
                 }
             }
@@ -381,7 +444,7 @@ void simulate_LL(Queue_LL *job_queue, Queue_LL *ready_queue, scheduler_func_LL s
                 ready_queue->memo->waiting_time += running->waiting_time;
                 ready_queue->memo->turnaround_time += running->turnaround_time;
     
-                running = NULL; // process done
+                running = NULL; //process done
                 time_quantum = 20;
             }
             
@@ -408,12 +471,12 @@ void simulate_Array(Queue_Array *job_queue, Queue_Array *ready_queue, scheduler_
 
     while (!is_empty_Array(job_queue) || !is_empty_Array(ready_queue) || running != NULL) {
 
-        // 1. 有 arrival 的 process -> ready queue
+        // 1.有arrival 的 process -> ready queue
         while (!is_empty_Array(job_queue) && job_queue->Data[job_queue->front].arrival_time <= now) {
             enqueue_Array(ready_queue, dequeue_Array(job_queue));
         }
 
-        // 2. 若 CPU idle，從 scheduler 選一個 process
+        // 2.若CPU idle，從scheduler選一個process
         if (running == NULL && !is_empty_Array(ready_queue)) {
             running = scheduler(ready_queue);
             if(running->start_time == -1){
@@ -422,10 +485,10 @@ void simulate_Array(Queue_Array *job_queue, Queue_Array *ready_queue, scheduler_
             }
         }
 
-        // 3. 執行 1 單位時間
+        // 3.執行1單位時間
         if (running != NULL) {
             
-            /*If the scheduler is Non-preemptive SJF, check if the remaining time of process that is running is shorter than the candidate.*/
+            //If the scheduler is Non-preemptive SJF, check if the remaining time of process that is running is shorter than the candidate.
             if(scheduler == schedule_psjf_Array && running != NULL && !is_empty_Array(ready_queue)){
                 Process *candidate = scheduler(ready_queue);
 
@@ -455,7 +518,7 @@ void simulate_Array(Queue_Array *job_queue, Queue_Array *ready_queue, scheduler_
                 ready_queue->memo->waiting_time += running->waiting_time;
                 ready_queue->memo->turnaround_time += running->turnaround_time;
     
-                running = NULL; // process done
+                running = NULL; //process done
                 time_quantum = 20;
             }
             
@@ -526,55 +589,4 @@ void load_processes_from_file_Array(Queue_Array *job){
     }
     fclose(fp);
     return;
-}
-
-int main() {
-    Queue_LL *job_queue_LL = malloc(sizeof(Queue_LL));
-    job_queue_LL->front = NULL;
-    job_queue_LL->rear = NULL;
-    job_queue_LL->memo = NULL;
-
-    Queue_LL *ready_queue_LL = malloc(sizeof(Queue_LL));
-    ready_queue_LL->front = NULL;
-    ready_queue_LL->rear = NULL;
-    ready_queue_LL->memo = createpro();
-
-    Queue_Array *job_queue_array = malloc(sizeof(Queue_Array));
-    initqueue_Array(job_queue_array, MAX);
-    job_queue_array->memo = NULL;
-
-    Queue_Array *ready_queue_array = malloc(sizeof(Queue_Array));
-    initqueue_Array(ready_queue_array, MAX);
-    ready_queue_array->memo = createpro();
-
-    
-    printf("Choose algorithm: 1=FCFS_LL, 2=SJF_LL, 3=RR_LL, 4=Preemptive SJF_LL ; 5=FCFS_Array, 6=SJF_Array, 7=RR_Array, 8=Preemptive SJF_Array\n");
-    int option;
-    scanf("%d", &option);
-
-    scheduler_func_LL scheduler_LL;
-    scheduler_func_Array scheduler_Array;
-    if (option == 1) scheduler_LL = schedule_fcfs_LL;
-    else if (option == 2) scheduler_LL = schedule_npsjf_LL;
-    else if (option == 3) scheduler_LL = schedule_rr_LL;
-    else if (option == 4) scheduler_LL = schedule_psjf_LL;
-    else if (option == 5) scheduler_Array = schedule_fcfs_Array;
-    else if (option == 6) scheduler_Array = schedule_npsjf_Array;
-    else if (option == 7) scheduler_Array = schedule_rr_Array;
-    else if (option == 8) scheduler_Array = schedule_psjf_Array;
-
-    if(0 < option && option < 5){
-        load_processes_from_file_LL(job_queue_LL);
-        simulate_LL(job_queue_LL, ready_queue_LL, scheduler_LL);
-        printf("total waiting time: %d\n",ready_queue_LL->memo->waiting_time);
-        printf("total turnaround time: %d\n", ready_queue_LL->memo->turnaround_time);
-    }
-    else{ 
-        load_processes_from_file_Array(job_queue_array);
-        simulate_Array(job_queue_array, ready_queue_array, scheduler_Array);
-        printf("total waiting time: %d\n",ready_queue_array->memo->waiting_time);
-        printf("total turnaround time: %d\n", ready_queue_array->memo->turnaround_time);
-    }
-    
-    return 0;
 }
