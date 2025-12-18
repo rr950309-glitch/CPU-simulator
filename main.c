@@ -377,15 +377,15 @@ void simulate_Array(Queue_Array *job_queue, Queue_Array *ready_queue, scheduler_
     int time_quantum = 20;//for rr scheduler
     Process *running = NULL;
 
-    while (!is_empty_Array(job_queue) || !is_empty_Array(ready_queue) || running != NULL) {
+    while (!is_empty_LL(job_queue) || !is_empty_LL(ready_queue) || running != NULL) {
 
         // 1. 有 arrival 的 process -> ready queue
         while (!is_empty_Array(job_queue) && job_queue->Data->arrival_time <= now) {
-            enqueue_Array(ready_queue, dequeue_Array(job_queue));
+            enqueue_LL(ready_queue, dequeue_LL(job_queue));
         }
 
         // 2. 若 CPU idle，從 scheduler 選一個 process
-        if (running == NULL && !is_empty_Array(ready_queue)) {
+        if (running == NULL && !is_empty_LL(ready_queue)) {
             running = scheduler(ready_queue, now);
             if(running->start_time == -1){
                 running->start_time = now;
