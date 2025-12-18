@@ -15,5 +15,7 @@
 114/11/26 新增輸出總等待時間之功能(FCFS、NPSJF測試成功)
 114/12/16 non-preemptive SJF prototype, 修改time 計算邏輯
 114/12/16 修改npsjf_Array運作邏輯，新增swap_array與struct_copy兩函式操作array
-144/12/17 寫完preemptive SJF 
-114/12/18 完成Round robin
+114/12/17 寫完preemptive SJF 
+114/12/18 完成Round robin_Linked list
+114/12/18 完成RR_Array
+114/12/18 修正npsjf_array

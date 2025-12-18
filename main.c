@@ -191,12 +191,15 @@ void swap_array(Process *a1, Process *a2){
 Process* schedule_npsjf_Array(Queue_Array *ready_queue, int now) {
     if(is_empty_Array(ready_queue)) return NULL;
     //從front開始
-    int cur = ready_queue->front;
+    int index, cur = ready_queue->front;
     int best_index = cur;
     int mintime = ready_queue->Data[cur].burst_time;
 
     for(int c=1; c < ready_queue->count; c++) {
         //找出時間為now時ready_queue中burst_time最小的Node
+        if((cur+1)%MAX == 0){
+            cur = -1;
+        }
         if (ready_queue->Data[cur+1].burst_time < mintime) {
             mintime = ready_queue->Data[cur+1].burst_time;
             best_index = cur+1;
