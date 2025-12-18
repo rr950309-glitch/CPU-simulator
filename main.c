@@ -433,7 +433,6 @@ void simulate_Array(Queue_Array *job_queue, Queue_Array *ready_queue, scheduler_
             if(scheduler == schedule_rr_Array && running !=NULL){
                 time_quantum--;
                 if(time_quantum==0){
-                    running->arrival_time=now+1;
                     Process* temp=running;
                     running = NULL;
                     enqueue_Array(ready_queue,temp);
