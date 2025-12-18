@@ -106,12 +106,12 @@ int is_empty_Array(Queue_Array *q){
 
 void enqueue_Array(Queue_Array *q, Process *p){
 
-    if(is_empty_Array(q)){
+    /*if(is_empty_Array(q)){
         q->Data[q->front] = *p;
         q->count++;
     }
     else{
-        if(q->rear != q->max){
+        if(q->rear != q->max-1){
             q->rear++;
             q->Data[q->rear] = *p;
             q->count++;
@@ -125,29 +125,15 @@ void enqueue_Array(Queue_Array *q, Process *p){
                 q->count++;
             }
         }
-    }
-}
-
-Process* dequeue_Array(Queue_Array *q){
-    Process *t = NULL;
-    if(is_empty_Array(q)) return NULL;
-    
-    else{
-        if(q->front == q->rear){
-            *t = q->Data[q->front];
-            q->front = q->rear = 0;
-            return t;
-        }
-        else{
-            int temp;
-            temp = q->front;
-            q->front++;
-            q->count--;
-            *t = q->Data[temp];
-            return t;
-        }
+    }*/
+   if(q->count == q->max){
+        printf("/n/n/Array is full. Can't not wrap-around to assign q->Data[0]!!!/n/n");
+        return;
     }
 
+    q->Data[q->rear] = *p;
+    q->rear = (q->rear + 1) % q->max;
+    q->count++;
 }
 
 Process *createpro(){
@@ -162,6 +148,25 @@ Process *createpro(){
     temp->turnaround_time = 0;
     temp->waiting_time = 0;
     return temp;
+}
+
+Process* dequeue_Array(Queue_Array *q){
+    if(is_empty_Array(q)) return NULL;
+    
+    Process *t = createpro();
+    *t = q->Data[q->front];
+
+    if(q->front == q->rear){
+        q->front = q->rear = 0;
+        return t;
+    }
+    else{
+        q->front++;
+        q->count--;
+        return t;
+    }
+    
+
 }
 
 void struct_copy(Process *des, Process *sour){
@@ -375,7 +380,7 @@ void simulate_Array(Queue_Array *job_queue, Queue_Array *ready_queue, scheduler_
     while (!is_empty_Array(job_queue) || !is_empty_Array(ready_queue) || running != NULL) {
 
         // 1. 有 arrival 的 process -> ready queue
-        while (!is_empty_Array(job_queue) && job_queue->Data->arrival_time <= now) {
+        while (!is_empty_Array(job_queue) && job_queue->Data[job_queue->front].arrival_time <= now) {
             enqueue_Array(ready_queue, dequeue_Array(job_queue));
         }
 
@@ -528,7 +533,7 @@ int main() {
     else if (option == 5) scheduler_Array = schedule_fcfs_Array;
     else if (option == 6) scheduler_Array = schedule_npsjf_Array;
     else if (option == 7) scheduler_Array = schedule_rr_Array;
-    else if (option == 8) scheduler_Array = schedule_rr_Array;
+    else if (option == 8) scheduler_Array = schedule_psjf_Array;
 
     if(0 < option && option < 5){
         load_processes_from_file_LL(job_queue_LL);
