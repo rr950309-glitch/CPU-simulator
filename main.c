@@ -352,7 +352,6 @@ void simulate_LL(Queue_LL *job_queue, Queue_LL *ready_queue, scheduler_func_LL s
             if(scheduler == schedule_rr_LL && running !=NULL){
                 time_quantum--;
                 if(time_quantum==0){
-                    running->arrival_time=now+1;
                     Process* temp=running;
                     running = NULL;
                     enqueue_LL(ready_queue,temp);
