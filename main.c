@@ -129,7 +129,7 @@ void enqueue_Array(Queue_Array *q, Process *p){
 }
 
 Process* dequeue_Array(Queue_Array *q){
-    Process *t;
+    Process *t = NULL;
     if(is_empty_Array(q)) return NULL;
     
     else{
