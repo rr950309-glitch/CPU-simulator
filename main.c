@@ -188,10 +188,10 @@ void swap_array(Process *a1, Process *a2){
     struct_copy(a2, temp);
 }
 
-Process* schedule_npsjf_Array(Queue_Array *ready_queue, int now) {
+Process* schedule_npsjf_Array(Queue_Array *ready_queue) {
     if(is_empty_Array(ready_queue)) return NULL;
     //從front開始
-    int index, cur = ready_queue->front;
+    int cur = ready_queue->front;
     int best_index = cur;
     int mintime = ready_queue->Data[cur].burst_time;
 
@@ -216,14 +216,14 @@ Process* schedule_npsjf_Array(Queue_Array *ready_queue, int now) {
 }
 
 
-typedef Process* (*scheduler_func_LL)(Queue_LL *ready_queue, int now);
-typedef Process* (*scheduler_func_Array)(Queue_Array *ready_queue, int now);
+typedef Process* (*scheduler_func_LL)(Queue_LL *ready_queue);
+typedef Process* (*scheduler_func_Array)(Queue_Array *ready_queue);
 
-Process* schedule_fcfs_LL(Queue_LL *ready_queue, int now) {
+Process* schedule_fcfs_LL(Queue_LL *ready_queue) {
     return dequeue_LL(ready_queue);
 }
 
-Process* schedule_npsjf_LL(Queue_LL *ready_queue, int now) {
+Process* schedule_npsjf_LL(Queue_LL *ready_queue) {
     if(is_empty_LL(ready_queue)) return NULL;
 
     Node *cur = ready_queue->front;
@@ -252,11 +252,11 @@ Process* schedule_npsjf_LL(Queue_LL *ready_queue, int now) {
     return dequeue_LL(ready_queue);
 }
 
-Process* schedule_rr_LL(Queue_LL *ready_queue, int now) {
+Process* schedule_rr_LL(Queue_LL *ready_queue) {
     return dequeue_LL(ready_queue);
 }
 
-Process* schedule_psjf_LL(Queue_LL *ready_queue, int now){
+Process* schedule_psjf_LL(Queue_LL *ready_queue){
     if(is_empty_LL(ready_queue)) return NULL;
 
     Node *cur = ready_queue->front;
@@ -288,15 +288,15 @@ Process* schedule_psjf_LL(Queue_LL *ready_queue, int now){
     return dequeue_LL(ready_queue);
 }
 
-Process* schedule_fcfs_Array(Queue_Array *ready_queue, int now){
+Process* schedule_fcfs_Array(Queue_Array *ready_queue){
     return dequeue_Array(ready_queue);
 }
 
-Process* schedule_rr_Array(Queue_Array *ready_queue, int now) {
+Process* schedule_rr_Array(Queue_Array *ready_queue) {
     return dequeue_Array(ready_queue);
 }
 
-Process* schedule_psjf_Array(Queue_Array *ready_queue,int now){
+Process* schedule_psjf_Array(Queue_Array *ready_queue){
     if(is_empty_Array(ready_queue)) return NULL;
 
     int cur_index = ready_queue->front;
@@ -341,7 +341,7 @@ void simulate_LL(Queue_LL *job_queue, Queue_LL *ready_queue, scheduler_func_LL s
 
         // 2. 若 CPU idle，從 scheduler 選一個 process
         if (running == NULL && !is_empty_LL(ready_queue)) {
-            running = scheduler(ready_queue, now);
+            running = scheduler(ready_queue);
             if(running->start_time == -1){
                 running->start_time = now;
                 running->response_time = running->start_time-running->arrival_time;
@@ -353,7 +353,7 @@ void simulate_LL(Queue_LL *job_queue, Queue_LL *ready_queue, scheduler_func_LL s
             
             /*If the scheduler is Non-preemptive SJF, check if the remaining time of process that is running is shorter than the candidate.*/
             if(scheduler == schedule_psjf_LL && running != NULL && !is_empty_LL(ready_queue)){
-                Process *candidate = scheduler(ready_queue, now);
+                Process *candidate = scheduler(ready_queue);
 
                 if (candidate != NULL && candidate->remaining_time < running->remaining_time) {
                     // preempt
@@ -415,7 +415,7 @@ void simulate_Array(Queue_Array *job_queue, Queue_Array *ready_queue, scheduler_
 
         // 2. 若 CPU idle，從 scheduler 選一個 process
         if (running == NULL && !is_empty_Array(ready_queue)) {
-            running = scheduler(ready_queue, now);
+            running = scheduler(ready_queue);
             if(running->start_time == -1){
                 running->start_time = now;
                 running->response_time = running->start_time-running->arrival_time;
@@ -427,7 +427,7 @@ void simulate_Array(Queue_Array *job_queue, Queue_Array *ready_queue, scheduler_
             
             /*If the scheduler is Non-preemptive SJF, check if the remaining time of process that is running is shorter than the candidate.*/
             if(scheduler == schedule_psjf_Array && running != NULL && !is_empty_Array(ready_queue)){
-                Process *candidate = scheduler(ready_queue, now);
+                Process *candidate = scheduler(ready_queue);
 
                 if (candidate != NULL && candidate->remaining_time < running->remaining_time) {
                     // preempt
